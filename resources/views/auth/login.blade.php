@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
@@ -122,28 +122,28 @@
           <p>Aplikasi Pengesahan MKKG &mdash; Sudinkar Jakarta Utara</p>
         </div>
 
-        <!-- Butang Log Masuk Google (Anda akan sediakan laluan OAuth nanti) -->
+        <!-- Masuk sebagai pengguna melalui Google -->
         <a href="{{ route('google.login') }}" class="google-btn">
           <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23.49 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.54-5.17 3.54-8.82z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.08 7.95-2.91l-3.88-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.56.38-2.28v-3.1H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.38z"/><path fill="#EA4335" d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.27 6.62l4 3.1C6.22 6.88 8.87 4.77 12 4.77z"/></svg>
-          <span>Teruskan dengan Google</span>
+          <span>Masuk lewat Google</span>
         </a>
 
-        <div class="divider"><span>ATAU MASUK SEBAGAI ADMIN</span></div>
+        <div class="divider"><span>ATAU MASUK DENGAN ID</span></div>
 
         <!-- Borang Log Masuk Breeze Berfungsi -->
         <form method="POST" action="{{ route('login') }}">
           @csrf
 
           <div class="field">
-            <label for="email">ID Admin atau E-mel</label>
-            <input type="text" id="email" name="email" value="{{ old('email') }}" placeholder="175254 atau admin@email.com" required autofocus autocomplete="username">
+            <label for="login-id">Masukkan ID</label>
+            <input type="text" id="login-id" name="email" value="{{ old('email') }}" placeholder="Masukkan ID Anda" required autofocus autocomplete="username">
             @error('email')
                 <span class="error-msg">{{ $message }}</span>
             @enderror
           </div>
 
           <div class="field">
-            <label for="password">Kata Laluan</label>
+            <label for="password">Password</label>
             <input type="password" id="password" name="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required autocomplete="current-password">
             @error('password')
                 <span class="error-msg">{{ $message }}</span>
