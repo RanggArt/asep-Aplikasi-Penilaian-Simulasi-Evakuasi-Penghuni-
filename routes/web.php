@@ -1,53 +1,62 @@
 <?php
 
+use App\Http\Controllers\ApemController;
+use App\Http\Controllers\GoogleAuthController;
+use App\Models\Apem;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// 0. Halaman Utama
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+// ==========================================
+// PORTAL UTAMA
+// ==========================================
+Route::view('/', 'portal')->name('home');
 
-// 1. Penilaian Umum Evakuasi
-Route::get('/penilaian-umum', function () {
-    return view('umum_evakuasi');
-})->name('form.umum');
+// ==========================================
+// MENU APLIKASI ASEP
+// ==========================================
+Route::view('/asep', 'welcome')->name('asep.index');
+Route::view('/penilaian-umum', 'umum_evakuasi')->name('form.umum');
+Route::view('/penilaian-fsm', 'fsm_evakuasi')->name('form.fsm');
+Route::view('/penilaian-teknisi', 'teknisi_evakuasi')->name('form.teknisi');
+Route::view('/penilaian-tim-evakuasi', 'tim_evakuasi')->name('form.timevakuasi');
+Route::view('/penilaian-titik-kumpul', 'titik_kumpul')->name('form.titikkumpul');
+Route::view('/penilaian-rescue', 'rescue_p3k')->name('form.rescue');
+Route::view('/penilaian-pemadam-internal', 'pemadam_internal')->name('form.pemadam');
+Route::view('/penilaian-pengamanan', 'pengamanan')->name('form.pengamanan');
+Route::view('/rekapitulasi', 'rekapitulasi')->name('rekap');
 
-// 2. Penilaian FSM
-Route::get('/penilaian-fsm', function () {
-    return view('fsm_evakuasi');
-})->name('form.fsm');
+// ==========================================
+// GOOGLE LOGIN (PENDAFTAR)
+// ==========================================
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.login');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
 
-// 3. Penilaian Tim Teknisi
-Route::get('/penilaian-teknisi', function () {
-    return view('teknisi_evakuasi');
-})->name('form.teknisi');
+// ==========================================
+// RUTE YANG WAJIB LOGIN (AUTH)
+// ==========================================
+Route::middleware('auth')->group(function () {
 
-// 4. Penilaian Tim Evakuasi
-Route::get('/penilaian-tim-evakuasi', function () {
-    return view('tim_evakuasi');
-})->name('form.timevakuasi');
+    // 1. Dashboard Pendaftar
+    Route::get('/dashboard', function () {
+        // Gunakan get() agar bisa menampilkan lebih dari 1 riwayat pengajuan di tampilan
+        $pengajuan = Apem::where('email', Auth::user()->email)->orderBy('created_at', 'desc')->get();
 
-// 5. Penilaian Tim Penanganan Titik Kumpul
-Route::get('/penilaian-titik-kumpul', function () {
-    return view('titik_kumpul');
-})->name('form.titikkumpul');
+        // Arahkan ke file user-apem.blade.php
+        return view('user-apem', compact('pengajuan'));
+    })->name('dashboard');
 
-// 6. Penilaian Tim Rescue dan P3K
-Route::get('/penilaian-rescue', function () {
-    return view('rescue_p3k');
-})->name('form.rescue');
+    // 2. Formulir Pendaftar APEM
+    Route::get('/apem', fn() => view('apem'))->name('apem.index');
+    Route::post('/apem/submit', [ApemController::class, 'store'])->name('apem.store');
 
-// 7. Penilaian Tim Pemadam Kebakaran Internal
-Route::get('/penilaian-pemadam-internal', function () {
-    return view('pemadam_internal');
-})->name('form.pemadam');
+    // 3. Panel Admin APEM
+    Route::middleware('can:manage-apem')->group(function () {
+        Route::get('/admin/apem', [ApemController::class, 'indexAdmin'])->name('admin.apem.index');
+        Route::post('/admin/apem/{id}/keputusan', [ApemController::class, 'updateStatus'])->name('admin.apem.keputusan');
+    });
+});
 
-// 8. Penilaian Tim Pengamanan
-Route::get('/penilaian-pengamanan', function () {
-    return view('pengamanan');
-})->name('form.pengamanan');
-
-// Rute untuk Kalkulator Rekapitulasi
-Route::get('/rekapitulasi', function () {
-    return view('rekapitulasi');
-})->name('rekap');
+// ==========================================
+// RUTE AUTENTIKASI BREEZE
+// ==========================================
+require __DIR__ . '/auth.php';
