@@ -7,4 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Apem extends Model
 {
     protected $guarded = []; // Mengizinkan semua kolom diisi
+
+    protected $casts = [
+        'review_details' => 'array',
+    ];
 }

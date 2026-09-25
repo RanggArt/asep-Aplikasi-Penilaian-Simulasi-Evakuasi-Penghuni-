@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Models\Apem;
 
 class ApemController extends Controller
@@ -26,15 +28,18 @@ class ApemController extends Controller
             ];
 
             $dokumen = [];
+            $reviewById = collect($item->review_details ?? [])->keyBy('id');
             foreach ($docTemplate as $doc) {
                 $field = $doc['id'];
                 if ($item->$field) {
+                    $review = $reviewById->get($field, []);
                     $dokumen[] = [
                         'id' => $doc['id'],
                         'title' => $doc['title'],
                         'fileName' => basename($item->$field),
-                        'checklist' => null,
-                        'catatan' => ''
+                        'url' => route('admin.apem.document', ['id' => $item->id, 'field' => $field]),
+                        'checklist' => $review['checklist'] ?? null,
+                        'catatan' => $review['catatan'] ?? ''
                     ];
                 }
             }
@@ -55,6 +60,32 @@ class ApemController extends Controller
         });
 
         return view('admin-apem', ['pendaftars' => $data]);
+    }
+
+    // Tampilkan lampiran inline bagi admin agar dapat dibuka di tab baru.
+    public function showDocument(int $id, string $field)
+    {
+        $allowedFields = [
+            'sertifikat_fsm', 'surat_penunjukan_fsm', 'surat_permohonan', 'program_kerja',
+            'struktur_organisasi', 'tugas_fungsi', 'koordinasi', 'sarana_prasarana',
+            'sop_rdtk', 'pelatihan_simulasi',
+        ];
+
+        abort_unless(in_array($field, $allowedFields, true), 404);
+
+        $apem = Apem::findOrFail($id);
+        $path = $apem->{$field};
+        abort_unless(is_string($path) && $path !== '', 404);
+
+        // File lama mungkin menyimpan nama saja; unggahan baru menyimpan apem_docs/nama-file.
+        $path = str_contains($path, '/') ? $path : 'apem_docs/'.$path;
+        abort_unless(Str::startsWith($path, 'apem_docs/'), 404);
+        abort_unless(Storage::disk('public')->exists($path), 404, 'Lampiran tidak ditemukan di penyimpanan server.');
+
+        return response()->file(storage_path('app/public/'.$path), [
+            'Content-Disposition' => 'inline; filename="'.str_replace('"', '', basename($path)).'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     // Fungsi menyimpan data dari Pendaftar
@@ -104,10 +135,75 @@ class ApemController extends Controller
         return response()->json(['message' => 'Permohonan berhasil dikirim.'], 201);
     }
     // Fungsi untuk menyimpan keputusan Admin
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, int $id)
     {
         $apem = Apem::findOrFail($id);
-        $apem->status = $request->status;
+
+        $allowedFields = [
+            'sertifikat_fsm', 'surat_penunjukan_fsm', 'surat_permohonan', 'program_kerja',
+            'struktur_organisasi', 'tugas_fungsi', 'koordinasi', 'sarana_prasarana',
+            'sop_rdtk', 'pelatihan_simulasi',
+        ];
+        $titles = [
+            'sertifikat_fsm' => 'Sertifikat FSM',
+            'surat_penunjukan_fsm' => 'Surat Penunjukan FSM',
+            'surat_permohonan' => 'Surat Permohonan Pengesahan MKKG',
+            'program_kerja' => 'Program Kerja MKKG',
+            'struktur_organisasi' => 'Struktur Organisasi MKKG',
+            'tugas_fungsi' => 'Tugas dan Fungsi MKKG',
+            'koordinasi' => 'Koordinasi',
+            'sarana_prasarana' => 'Sarana dan Prasarana MKKG',
+            'sop_rdtk' => 'Standar Operasional Prosedur dan RDTK',
+            'pelatihan_simulasi' => 'Pelatihan dan Simulasi Evakuasi Kebakaran',
+        ];
+
+        $validated = $request->validate([
+            'status' => ['required', 'in:approved,rejected'],
+            'dokumen' => ['required', 'array', 'min:1'],
+            'dokumen.*.id' => ['required', 'string', 'in:'.implode(',', $allowedFields)],
+            'dokumen.*.checklist' => ['required', 'in:ok,bad'],
+            'dokumen.*.catatan' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $uploadedFields = collect($allowedFields)
+            ->filter(fn ($field) => filled($apem->{$field}))
+            ->values()
+            ->all();
+        $reviews = collect($validated['dokumen']);
+        $reviewedFields = $reviews->pluck('id')->all();
+
+        if (count($reviewedFields) !== count(array_unique($reviewedFields))
+            || count($uploadedFields) !== count($reviewedFields)
+            || array_diff($uploadedFields, $reviewedFields)
+            || array_diff($reviewedFields, $uploadedFields)) {
+            return response()->json(['message' => 'Checklist harus memuat setiap dokumen yang diunggah tepat satu kali.'], 422);
+        }
+
+        $hasRejectedDocument = $reviews->contains(fn ($review) => $review['checklist'] === 'bad');
+        $hasMissingReason = $reviews->contains(fn ($review) =>
+            $review['checklist'] === 'bad' && trim($review['catatan'] ?? '') === ''
+        );
+
+        if ($validated['status'] === 'approved' && $hasRejectedDocument) {
+            return response()->json(['message' => 'Permohonan hanya dapat disetujui jika semua dokumen dinyatakan sesuai.'], 422);
+        }
+
+        if ($validated['status'] === 'rejected' && ! $hasRejectedDocument) {
+            return response()->json(['message' => 'Tandai minimal satu dokumen sebagai tidak sesuai sebelum menolak permohonan.'], 422);
+        }
+
+        if ($validated['status'] === 'rejected' && $hasMissingReason) {
+            return response()->json(['message' => 'Setiap dokumen yang ditolak harus memiliki catatan alasan.'], 422);
+        }
+
+        $apem->status = $validated['status'];
+        $apem->review_details = $reviews->map(fn ($review) => [
+            'id' => $review['id'],
+            'title' => $titles[$review['id']],
+            'fileName' => basename($apem->{$review['id']}),
+            'checklist' => $review['checklist'],
+            'catatan' => trim($review['catatan'] ?? ''),
+        ])->values()->all();
         $apem->save();
 
         // (Logika pengiriman email via Laravel Mail bisa diletakkan di sini nantinya)

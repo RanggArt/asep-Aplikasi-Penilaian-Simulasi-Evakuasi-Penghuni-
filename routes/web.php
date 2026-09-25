@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ApemController;
 use App\Http\Controllers\GoogleAuthController;
+use App\Http\Controllers\SuperAdminSettingsController;
 use App\Models\Apem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -9,21 +10,27 @@ use Illuminate\Support\Facades\Route;
 // ==========================================
 // PORTAL UTAMA
 // ==========================================
-Route::view('/', 'portal')->name('home');
+Route::get('/', function () {
+    $asepEnabled = \App\Support\AsepAvailability::enabled();
+
+    return view('portal', compact('asepEnabled'));
+})->name('home');
 
 // ==========================================
 // MENU APLIKASI ASEP
 // ==========================================
-Route::view('/asep', 'welcome')->name('asep.index');
-Route::view('/penilaian-umum', 'umum_evakuasi')->name('form.umum');
-Route::view('/penilaian-fsm', 'fsm_evakuasi')->name('form.fsm');
-Route::view('/penilaian-teknisi', 'teknisi_evakuasi')->name('form.teknisi');
-Route::view('/penilaian-tim-evakuasi', 'tim_evakuasi')->name('form.timevakuasi');
-Route::view('/penilaian-titik-kumpul', 'titik_kumpul')->name('form.titikkumpul');
-Route::view('/penilaian-rescue', 'rescue_p3k')->name('form.rescue');
-Route::view('/penilaian-pemadam-internal', 'pemadam_internal')->name('form.pemadam');
-Route::view('/penilaian-pengamanan', 'pengamanan')->name('form.pengamanan');
-Route::view('/rekapitulasi', 'rekapitulasi')->name('rekap');
+Route::middleware('asep.enabled')->group(function () {
+    Route::view('/asep', 'welcome')->name('asep.index');
+    Route::view('/penilaian-umum', 'umum_evakuasi')->name('form.umum');
+    Route::view('/penilaian-fsm', 'fsm_evakuasi')->name('form.fsm');
+    Route::view('/penilaian-teknisi', 'teknisi_evakuasi')->name('form.teknisi');
+    Route::view('/penilaian-tim-evakuasi', 'tim_evakuasi')->name('form.timevakuasi');
+    Route::view('/penilaian-titik-kumpul', 'titik_kumpul')->name('form.titikkumpul');
+    Route::view('/penilaian-rescue', 'rescue_p3k')->name('form.rescue');
+    Route::view('/penilaian-pemadam-internal', 'pemadam_internal')->name('form.pemadam');
+    Route::view('/penilaian-pengamanan', 'pengamanan')->name('form.pengamanan');
+    Route::view('/rekapitulasi', 'rekapitulasi')->name('rekap');
+});
 
 // ==========================================
 // GOOGLE LOGIN (PENDAFTAR)
@@ -52,7 +59,13 @@ Route::middleware('auth')->group(function () {
     // 3. Panel Admin APEM
     Route::middleware('can:manage-apem')->group(function () {
         Route::get('/admin/apem', [ApemController::class, 'indexAdmin'])->name('admin.apem.index');
+        Route::get('/admin/apem/{id}/dokumen/{field}', [ApemController::class, 'showDocument'])->name('admin.apem.document');
         Route::post('/admin/apem/{id}/keputusan', [ApemController::class, 'updateStatus'])->name('admin.apem.keputusan');
+    });
+
+    Route::middleware('can:manage-app-settings')->group(function () {
+        Route::get('/super-admin/pengaturan', [SuperAdminSettingsController::class, 'edit'])->name('super-admin.settings');
+        Route::put('/super-admin/pengaturan/asep', [SuperAdminSettingsController::class, 'updateAsep'])->name('super-admin.settings.asep');
     });
 });
 

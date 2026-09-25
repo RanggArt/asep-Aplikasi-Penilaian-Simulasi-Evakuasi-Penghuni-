@@ -23,5 +23,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manage-apem', function ($user): bool {
             return in_array($user->role, ['admin', 'super_admin'], true);
         });
+
+        Gate::define('manage-app-settings', fn ($user): bool => $user->role === 'super_admin');
     }
 }

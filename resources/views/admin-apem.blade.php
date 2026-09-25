@@ -164,6 +164,9 @@
         </span>
       </div>
       <form method="POST" action="{{ route('logout') }}">
+        @if (auth()->user()->role === 'super_admin')
+          <a href="{{ route('super-admin.settings') }}" class="logout-button" style="text-decoration:none;">Pengaturan</a>
+        @endif
         @csrf
         <button type="submit" class="logout-button">Keluar</button>
       </form>
@@ -327,8 +330,7 @@
       const row = document.createElement('div');
       row.className = 'doc-row' + (doc.checklist === 'ok' ? ' checked-ok' : doc.checklist === 'bad' ? ' checked-bad' : '');
       
-      // Path file disesuaikan dengan folder storage public Laravel
-      const fileUrl = '/storage/apem_docs/' + doc.fileName;
+      const fileUrl = doc.url;
 
       row.innerHTML = `
         <div class="doc-icon">${ICON_DOC}</div>
@@ -413,11 +415,23 @@
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
       },
-      body: JSON.stringify({ status: status })
+      body: JSON.stringify({
+        status: status,
+        dokumen: item.dokumen.map(doc => ({
+          id: doc.id,
+          checklist: doc.checklist,
+          catatan: doc.catatan || ''
+        }))
+      })
     })
-    .then(res => res.json())
+    .then(async res => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Keputusan gagal disimpan.');
+      return data;
+    })
     .then(data => {
       // Munculkan kotak pesan (alert) sukses
       alert(data.message);
@@ -426,7 +440,7 @@
     })
     .catch(err => {
       console.error(err);
-      alert('Terjadi kesalahan saat memproses keputusan.');
+      alert(err.message || 'Terjadi kesalahan saat memproses keputusan.');
     });
   }
 })();

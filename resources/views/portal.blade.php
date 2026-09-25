@@ -51,10 +51,17 @@
                     </p>
                 </div>
                 <!-- Link menuju rute ASEP -->
-                <a href="{{ route('asep.index') }}" class="w-full py-3 px-5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-semibold text-sm flex items-center justify-center space-x-2 transition-all shadow-lg shadow-red-600/30">
-                    <span>Buka Aplikasi ASEP</span>
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
-                </a>
+                @if ($asepEnabled)
+                    <a href="{{ route('asep.index') }}" class="w-full py-3 px-5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-semibold text-sm flex items-center justify-center space-x-2 transition-all shadow-lg shadow-red-600/30">
+                        <span>Buka Aplikasi ASEP</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                @else
+                    <span aria-disabled="true" class="w-full py-3 px-5 rounded-xl bg-slate-700 text-slate-400 font-semibold text-sm flex items-center justify-center space-x-2 cursor-not-allowed border border-slate-600">
+                        <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                        <span>ASEP sedang dinonaktifkan</span>
+                    </span>
+                @endif
             </div>
 
             <!-- TOMBOL 2: Aplikasi APEM -->
@@ -79,6 +86,12 @@
 
         </div>
     </main>
+
+    @if (session('asep_disabled'))
+        <div role="status" class="relative z-10 mx-auto mb-5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-center text-amber-200">
+            {{ session('asep_disabled') }}
+        </div>
+    @endif
 
     <!-- Footer -->
     <footer class="relative z-10 py-6 text-center text-xs text-slate-500 border-t border-slate-800/80 mt-auto">

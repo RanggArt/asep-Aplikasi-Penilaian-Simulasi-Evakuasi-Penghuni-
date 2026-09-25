@@ -25,13 +25,26 @@
   .btn:hover{ background: var(--primary-dark); }
 
   .history-section h3{ font-family:'Oswald', sans-serif; margin-bottom: 16px; border-bottom: 2px solid var(--line); padding-bottom:10px; }
-  .card{ background: var(--surface); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+  .card{ background: var(--surface); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:12px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; align-items:start; }
   .card-info h4{ margin:0 0 4px; font-size:16px; }
   .card-info p{ margin:0; font-size:13px; color:var(--ink-muted); }
   .status-badge{ font-size:12px; font-weight:600; padding:6px 12px; border-radius:999px; }
   .status-pending{ background: var(--warn-tint); color: var(--warn); }
   .status-approved{ background: var(--ok-tint); color: var(--ok); }
   .status-rejected{ background: var(--err-tint); color: var(--err); }
+  .card-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
+  .detail-btn{ border:0; border-radius:7px; padding:8px 16px; background:#087A50; color:#fff; font:inherit; font-weight:600; cursor:pointer; }
+  .detail-btn:hover{ background:#06613F; }
+  .detail-dialog{ width:min(620px,calc(100% - 32px)); max-height:80vh; overflow:auto; border:1px solid var(--line); border-radius:12px; padding:22px; color:var(--ink); }
+  .detail-dialog::backdrop{ background:rgba(20,20,24,.55); }
+  .detail-dialog h3{ margin:0 0 5px; font-family:'Oswald',sans-serif; font-size:22px; }
+  .detail-dialog .dialog-subtitle{ color:var(--ink-muted); font-size:13px; margin-bottom:16px; }
+  .review-list{ margin:12px 0 0; padding:0; list-style:none; }
+  .review-list li{ margin:0 0 10px; padding:12px; border:1px solid #E8B4AE; border-radius:8px; background:var(--err-tint); font-size:13px; }
+  .review-list .file-name{ margin-top:3px; color:var(--ink-muted); font-size:12px; overflow-wrap:anywhere; }
+  .review-list .reason{ margin-top:6px; white-space:pre-wrap; }
+  .dialog-close{ margin-top:18px; border:1px solid var(--line); border-radius:7px; padding:8px 15px; background:white; color:var(--ink); font:inherit; cursor:pointer; }
+  @media(max-width:560px){ .card{ grid-template-columns:1fr; } .card-actions{ flex-direction:row; justify-content:space-between; align-items:center; } }
   .empty{ text-align:center; padding:30px; color:var(--ink-muted); font-size:14px; }
 </style>
 </head>
@@ -72,11 +85,11 @@
                     @elseif($item->status == 'approved')
                         Permohonan pengesahan gedung ini sudah disetujui.
                     @else
-                        Permohonan memerlukan perbaikan. Silakan hubungi admin untuk mengetahui dokumen yang perlu dilengkapi.
+                        Permohonan memerlukan perbaikan. Klik tombol Detail untuk melihat dokumen yang ditolak dan catatan admin.
                     @endif
                 </p>
             </div>
-            <div>
+            <div class="card-actions">
                 @if($item->status == 'pending')
                     <span class="status-badge status-pending">Menunggu Diperiksa</span>
                 @elseif($item->status == 'approved')
@@ -84,7 +97,36 @@
                 @else
                     <span class="status-badge status-rejected">Perlu Revisi / Ditolak</span>
                 @endif
+                <button type="button" class="detail-btn" onclick="document.getElementById('detail-{{ $item->id }}').showModal()">Detail</button>
             </div>
+            <dialog class="detail-dialog" id="detail-{{ $item->id }}" aria-labelledby="detail-title-{{ $item->id }}">
+                <h3 id="detail-title-{{ $item->id }}">Detail Pengesahan</h3>
+                <p class="dialog-subtitle">{{ $item->nama_gedung }} &bull; {{ $item->kota }}</p>
+                @if($item->status == 'rejected')
+                    @php($rejectedReviews = collect($item->review_details ?? [])->where('checklist', 'bad'))
+                    <strong>Dokumen yang perlu diperbaiki:</strong>
+                    @if($rejectedReviews->isNotEmpty())
+                        <ul class="review-list">
+                            @foreach($rejectedReviews as $review)
+                                <li>
+                                    <strong>{{ $review['title'] ?? 'Dokumen' }}</strong>
+                                    @if(!empty($review['fileName']))
+                                        <div class="file-name">File: {{ $review['fileName'] }}</div>
+                                    @endif
+                                    <div class="reason"><strong>Alasan admin:</strong> {{ $review['catatan'] ?? 'Admin belum memberikan keterangan.' }}</div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p style="margin-top:10px;">Rincian penolakan belum tersedia. Minta admin meninjau ulang dan menyimpan catatan untuk setiap dokumen yang ditolak.</p>
+                    @endif
+                @elseif($item->status == 'approved')
+                    <p>Permohonan disetujui admin. Seluruh dokumen dinyatakan sesuai.</p>
+                @else
+                    <p>Berkas sudah diterima dan masih menunggu pemeriksaan admin. Belum ada catatan penolakan.</p>
+                @endif
+                <form method="dialog"><button class="dialog-close">Tutup</button></form>
+            </dialog>
         </div>
         @endforeach
     @else
