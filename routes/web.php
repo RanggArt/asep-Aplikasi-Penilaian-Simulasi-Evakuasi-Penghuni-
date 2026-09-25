@@ -19,7 +19,7 @@ Route::get('/', function () {
 // ==========================================
 // MENU APLIKASI ASEP
 // ==========================================
-Route::middleware('asep.enabled')->group(function () {
+Route::middleware(['asep.enabled', 'auth', 'can:manage-apem'])->group(function () {
     Route::view('/asep', 'welcome')->name('asep.index');
     Route::view('/penilaian-umum', 'umum_evakuasi')->name('form.umum');
     Route::view('/penilaian-fsm', 'fsm_evakuasi')->name('form.fsm');

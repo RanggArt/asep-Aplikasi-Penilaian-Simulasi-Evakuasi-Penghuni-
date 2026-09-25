@@ -29,11 +29,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        if (in_array(Auth::user()->role, ['admin', 'super_admin'], true)) {
-            return redirect()->route('admin.apem.index');
-        }
+        $defaultDestination = in_array(Auth::user()->role, ['admin', 'super_admin'], true)
+            ? route('admin.apem.index')
+            : RouteServiceProvider::HOME;
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+        return redirect()->intended($defaultDestination);
     }
 
     /**
