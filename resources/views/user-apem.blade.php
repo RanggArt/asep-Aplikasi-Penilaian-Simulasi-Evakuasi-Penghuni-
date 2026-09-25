@@ -35,15 +35,13 @@
   .card-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
   .detail-btn{ border:0; border-radius:7px; padding:8px 16px; background:#087A50; color:#fff; font:inherit; font-weight:600; cursor:pointer; }
   .detail-btn:hover{ background:#06613F; }
-  .detail-dialog{ width:min(620px,calc(100% - 32px)); max-height:80vh; overflow:auto; border:1px solid var(--line); border-radius:12px; padding:22px; color:var(--ink); }
-  .detail-dialog::backdrop{ background:rgba(20,20,24,.55); }
-  .detail-dialog h3{ margin:0 0 5px; font-family:'Oswald',sans-serif; font-size:22px; }
-  .detail-dialog .dialog-subtitle{ color:var(--ink-muted); font-size:13px; margin-bottom:16px; }
+  .review-panel{ grid-column:1/-1; border-top:1px solid var(--line); padding-top:14px; }
+  .review-panel[hidden]{ display:none; }
+  .review-panel h4{ margin:0 0 10px; font-size:15px; }
   .review-list{ margin:12px 0 0; padding:0; list-style:none; }
   .review-list li{ margin:0 0 10px; padding:12px; border:1px solid #E8B4AE; border-radius:8px; background:var(--err-tint); font-size:13px; }
   .review-list .file-name{ margin-top:3px; color:var(--ink-muted); font-size:12px; overflow-wrap:anywhere; }
   .review-list .reason{ margin-top:6px; white-space:pre-wrap; }
-  .dialog-close{ margin-top:18px; border:1px solid var(--line); border-radius:7px; padding:8px 15px; background:white; color:var(--ink); font:inherit; cursor:pointer; }
   @media(max-width:560px){ .card{ grid-template-columns:1fr; } .card-actions{ flex-direction:row; justify-content:space-between; align-items:center; } }
   .empty{ text-align:center; padding:30px; color:var(--ink-muted); font-size:14px; }
 </style>
@@ -97,14 +95,12 @@
                 @else
                     <span class="status-badge status-rejected">Perlu Revisi / Ditolak</span>
                 @endif
-                <button type="button" class="detail-btn" onclick="document.getElementById('detail-{{ $item->id }}').showModal()">Detail</button>
+                <button type="button" class="detail-btn" data-detail-toggle aria-expanded="false" aria-controls="detail-{{ $item->id }}">Detail</button>
             </div>
-            <dialog class="detail-dialog" id="detail-{{ $item->id }}" aria-labelledby="detail-title-{{ $item->id }}">
-                <h3 id="detail-title-{{ $item->id }}">Detail Pengesahan</h3>
-                <p class="dialog-subtitle">{{ $item->nama_gedung }} &bull; {{ $item->kota }}</p>
+            <div class="review-panel" id="detail-{{ $item->id }}" hidden>
                 @if($item->status == 'rejected')
                     @php($rejectedReviews = collect($item->review_details ?? [])->where('checklist', 'bad'))
-                    <strong>Dokumen yang perlu diperbaiki:</strong>
+                    <h4>Dokumen yang perlu diperbaiki</h4>
                     @if($rejectedReviews->isNotEmpty())
                         <ul class="review-list">
                             @foreach($rejectedReviews as $review)
@@ -121,12 +117,11 @@
                         <p style="margin-top:10px;">Rincian penolakan belum tersedia. Minta admin meninjau ulang dan menyimpan catatan untuk setiap dokumen yang ditolak.</p>
                     @endif
                 @elseif($item->status == 'approved')
-                    <p>Permohonan disetujui admin. Seluruh dokumen dinyatakan sesuai.</p>
+                    <p><strong>Status:</strong> Permohonan disetujui admin. Seluruh dokumen dinyatakan sesuai.</p>
                 @else
                     <p>Berkas sudah diterima dan masih menunggu pemeriksaan admin. Belum ada catatan penolakan.</p>
                 @endif
-                <form method="dialog"><button class="dialog-close">Tutup</button></form>
-            </dialog>
+            </div>
         </div>
         @endforeach
     @else
@@ -137,5 +132,17 @@
   </div>
 </div>
 
+<script>
+document.querySelectorAll('[data-detail-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+        const panel = document.getElementById(button.getAttribute('aria-controls'));
+        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+
+        panel.hidden = isExpanded;
+        button.setAttribute('aria-expanded', String(!isExpanded));
+        button.textContent = isExpanded ? 'Detail' : 'Tutup Detail';
+    });
+});
+</script>
 </body>
 </html>
