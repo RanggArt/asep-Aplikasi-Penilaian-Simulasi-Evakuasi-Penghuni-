@@ -336,7 +336,11 @@
         <div class="doc-icon">${ICON_DOC}</div>
         <div class="doc-body">
           <p class="doc-title">${doc.title}</p>
-          <p class="doc-file"><a href="${fileUrl}" target="_blank" title="Klik untuk membuka file">${doc.fileName}</a></p>
+          <p class="doc-file">
+            <a href="${fileUrl}" target="_blank" rel="noopener" title="Lihat lampiran di tab baru">${doc.fileName}</a>
+            <span aria-hidden="true"> · </span>
+            <a href="${doc.downloadUrl}" title="Unduh lampiran">Unduh</a>
+          </p>
           ${doc.checklist === 'bad' ? `<div class="doc-note"><textarea placeholder="Catatan ketidaksesuaian (wajib diisi)...">${doc.catatan}</textarea></div>` : ''}
         </div>
         <div class="doc-toggle">

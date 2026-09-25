@@ -33,7 +33,7 @@
   .status-approved{ background: var(--ok-tint); color: var(--ok); }
   .status-rejected{ background: var(--err-tint); color: var(--err); }
   .card-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
-  .detail-btn{ border:0; border-radius:7px; padding:8px 16px; background:#087A50; color:#fff; font:inherit; font-weight:600; cursor:pointer; }
+  .detail-btn{ border:0; border-radius:999px; padding:6px 12px; background:#087A50; color:#fff; font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
   .detail-btn:hover{ background:#06613F; }
   .review-panel{ grid-column:1/-1; border-top:1px solid var(--line); padding-top:14px; }
   .review-panel[hidden]{ display:none; }

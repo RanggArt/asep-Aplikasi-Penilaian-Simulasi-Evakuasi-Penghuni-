@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use App\Models\Apem;
 
 class ApemController extends Controller
@@ -38,6 +36,7 @@ class ApemController extends Controller
                         'title' => $doc['title'],
                         'fileName' => basename($item->$field),
                         'url' => route('admin.apem.document', ['id' => $item->id, 'field' => $field]),
+                        'downloadUrl' => route('admin.apem.document', ['id' => $item->id, 'field' => $field, 'download' => 1]),
                         'checklist' => $review['checklist'] ?? null,
                         'catatan' => $review['catatan'] ?? ''
                     ];
@@ -74,18 +73,29 @@ class ApemController extends Controller
         abort_unless(in_array($field, $allowedFields, true), 404);
 
         $apem = Apem::findOrFail($id);
-        $path = $apem->{$field};
-        abort_unless(is_string($path) && $path !== '', 404);
+        $storedPath = $apem->{$field};
+        abort_unless(is_string($storedPath) && $storedPath !== '', 404, 'Path lampiran belum tersimpan pada pengajuan ini.');
 
-        // File lama mungkin menyimpan nama saja; unggahan baru menyimpan apem_docs/nama-file.
-        $path = str_contains($path, '/') ? $path : 'apem_docs/'.$path;
-        abort_unless(Str::startsWith($path, 'apem_docs/'), 404);
-        abort_unless(Storage::disk('public')->exists($path), 404, 'Lampiran tidak ditemukan di penyimpanan server.');
+        // Semua unggahan aplikasi berada di apem_docs; basename juga menangani format path lama.
+        $fileName = basename(str_replace('\\', '/', $storedPath));
+        abort_unless($fileName !== '' && $fileName !== '.' && $fileName !== '..', 404, 'Nama lampiran tidak valid.');
 
-        return response()->file(storage_path('app/public/'.$path), [
-            'Content-Disposition' => 'inline; filename="'.str_replace('"', '', basename($path)).'"',
+        $relativePath = 'apem_docs/'.$fileName;
+        $publicRoot = config('filesystems.disks.public.root', storage_path('app/public'));
+        $absolutePath = rtrim($publicRoot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$relativePath;
+        abort_unless(is_file($absolutePath) && is_readable($absolutePath), 404, 'File lampiran tidak ditemukan di penyimpanan server.');
+
+        $headers = [
             'X-Content-Type-Options' => 'nosniff',
-        ]);
+        ];
+
+        if (request()->boolean('download')) {
+            return response()->download($absolutePath, $fileName, $headers);
+        }
+
+        $headers['Content-Disposition'] = 'inline';
+
+        return response()->file($absolutePath, $headers);
     }
 
     // Fungsi menyimpan data dari Pendaftar
