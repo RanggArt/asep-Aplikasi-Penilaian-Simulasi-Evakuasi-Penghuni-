@@ -3,7 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BECEK - Sistem Informasi Bidang Pencegahan Kebakaran</title>
+    <title>siBECEK — Sistem Informasi Bidang Pencegahan Kebakaran</title>
+    <meta name="description" content="siBECEK mewujudkan transformasi layanan publik digital bidang pencegahan kebakaran, mengacu pada Pergub DKI Jakarta Nomor 108 Tahun 2022 tentang SPBE.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="id_ID">
+    <meta property="og:site_name" content="siBECEK">
+    <meta property="og:title" content="siBECEK — Sistem Informasi Bidang Pencegahan Kebakaran">
+    <meta property="og:description" content="Wujud transformasi layanan publik digital bidang pencegahan kebakaran yang mengacu pada Pergub DKI Jakarta Nomor 108 Tahun 2022 tentang SPBE.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="siBECEK — Sistem Informasi Bidang Pencegahan Kebakaran">
+    <meta name="twitter:description" content="Wujud transformasi layanan publik digital bidang pencegahan kebakaran yang mengacu pada Pergub DKI Jakarta Nomor 108 Tahun 2022 tentang SPBE.">
+    <link rel="icon" href="{{ asset('icon.ico') }}" type="image/x-icon">
   
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,7 +28,7 @@
         <div class="max-w-4xl mx-auto flex flex-col items-center">
             <!-- Logo Ikon Damkar -->
             <div class="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-600/50 border border-red-400/30 mb-5">
-                <i class="fa-solid fa-fire-extinguisher text-3xl text-white"></i>
+                <img src="{{ asset('assets/logo_damkar.png') }}" alt="Logo Damkar" class="w-12 h-12 object-contain">
             </div>
             
             <!-- Judul Utama -->
