@@ -175,7 +175,7 @@
 </div>
 
 <div class="wrap">
-  <div class="demo-notice" id="demoNotice">Terkoneksi dengan Database Lokal MAMP MySQL.</div>
+  <div class="demo-notice" id="demoNotice">Aplikasi ini dirancang dan dibangun oleh Rangga Ganteng, Satgas Jakarta Utara.</div>
 
   <div id="listView">
     <div class="stats" id="statsRow"></div>
