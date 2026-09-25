@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 <title>Masuk — APEM</title>
+<link rel="icon" href="{{ asset('icon.ico') }}" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
@@ -58,7 +59,7 @@
 
   .logo-badge{ width:56px; height:56px; margin:0 auto 16px; border-radius:16px; background: conic-gradient(from 180deg, var(--red), var(--blue), var(--red)); padding:2px; }
   .logo-badge-inner{ width:100%; height:100%; border-radius:14px; background: var(--bg-soft); display:flex; align-items:center; justify-content:center; }
-  .logo-badge svg{ width:26px; height:26px; }
+  .logo-badge img{ width:42px; height:42px; object-fit:contain; }
 
   .auth-title{ text-align:center; margin-bottom: 22px; }
   .auth-title h1{ font-size:20px; font-weight:600; margin:0 0 4px; }
@@ -112,9 +113,7 @@
       <div class="auth-card">
         <div class="logo-badge">
           <div class="logo-badge-inner">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
-            </svg>
+            <img src="{{ asset('assets/logo_damkar.png') }}" alt="Logo Damkar">
           </div>
         </div>
         <div class="auth-title">
